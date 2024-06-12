@@ -8,10 +8,14 @@ Illusions:
   octave-illusion
   shepard-tone'
 
-if [ -z "$1" ]; then
+case "$1" in
+'' | -h | --help | help)
   echo >&2 "$USAGE"
-  exit 1
-elif test -f ./src/"$1"; then
+  exit
+  ;;
+esac
+
+if test -f ./src/"$1"; then
   ./src/"$1" "${@:2}"
 else
   echo >&2 "Couldn't find audio illusion: $1"
