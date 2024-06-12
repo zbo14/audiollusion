@@ -1,0 +1,45 @@
+#!/bin/bash
+
+MS=250
+LOW_FREQ=440
+HIGH_FREQ=880
+REPEAT=10
+
+USAGE=$'Usage: audiollusion octave-illusion [-d <number>] [-f <number>,<number>] [-r <number>]
+  -d: duration of each pitch in milliseconds
+  -f: low and high frequencies, respectively
+  -r: number of repetitions (each pitch repeats this many times)'
+
+while getopts ":d:f:r:" opt; do
+  case "${opt}" in
+  d)
+    MS=${OPTARG}
+    ;;
+  f)
+    LOW_FREQ="$(echo "$OPTARG" | cut -d',' -f1)"
+    HIGH_FREQ="$(echo "$OPTARG" | cut -d',' -f2)"
+    ;;
+
+  r)
+    REPEAT=${OPTARG}
+    ;;
+
+  *)
+    echo >&2 "$USAGE"
+    exit 1
+    ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
+seconds() {
+  echo "scale=4; $MS/1000" | bc
+}
+
+play -mq \
+  <(sox -n -p synth "$(seconds)" sin "$LOW_FREQ" pad "$(seconds)" 0) \
+  <(sox -n -p synth "$(seconds)" sin "$HIGH_FREQ" pad 0 "$(seconds)") \
+  repeat "$REPEAT" \
+  remix - \
+  norm -1

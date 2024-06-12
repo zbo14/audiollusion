@@ -1,0 +1,40 @@
+#!/bin/bash
+
+SECONDS=6
+LOW_FREQ=440
+HIGH_FREQ=460
+REPEAT=10
+
+USAGE=$'Usage: audiollusion binaural-beats [-d <number>] [-f <number>,<number>] [-r <number>]
+  -d: duration of each cycle in seconds
+  -f: low and high frequencies, respectively
+  -r: number of repetitions (each pitch repeats this many times)'
+
+while getopts ":d:f:r:" opt; do
+  case "${opt}" in
+  d)
+    SECONDS=${OPTARG}
+    ;;
+  f)
+    LOW_FREQ="$(echo "$OPTARG" | cut -d',' -f1)"
+    HIGH_FREQ="$(echo "$OPTARG" | cut -d',' -f2)"
+    ;;
+
+  r)
+    REPEAT=${OPTARG}
+    ;;
+
+  *)
+    echo >&2 "$USAGE"
+    exit 1
+    ;;
+  esac
+done
+
+shift $((OPTIND - 1))
+
+play -mq \
+  <(sox -n -p synth "$SECONDS" sin "$LOW_FREQ" remix 1 0) \
+  <(sox -n -p synth "$SECONDS" sin "$HIGH_FREQ" remix 0 1) \
+  repeat "$REPEAT" \
+  norm -1

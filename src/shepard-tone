@@ -1,0 +1,47 @@
+#!/bin/bash
+
+WAVE=sin
+SECONDS=10
+NOTE=C
+REPEAT=6
+
+USAGE=$'Usage: audiollusion shepard-tone [-d <number>] [-n <string>] [-r <number>] [-w <string>]
+  -d: duration of each cycle in seconds
+  -n: note name (e.g. "C#")
+  -r: number of repetitions
+  -w: type of wave (e.g. "saw")'
+
+while getopts ":d:n:r:w:" opt; do
+    case "${opt}" in
+        d)
+            SECONDS=${OPTARG}
+            ;;
+
+        n)
+            NOTE=${OPTARG}
+            ;;
+
+        r)
+            REPEAT=${OPTARG}
+            ;;
+
+        w)
+            WAVE=${OPTARG}
+            ;;
+        *)
+            >&2 echo "$USAGE"
+            exit 1
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+play -mq \
+    <(sox -n -p synth "$SECONDS" "$WAVE" "$NOTE"2/"$NOTE"3 fade t "$SECONDS") \
+    <(sox -n -p synth "$SECONDS" "$WAVE" "$NOTE"3/"$NOTE"4 fade t 0 "$SECONDS" "$SECONDS") \
+    <(sox -n -p synth "$SECONDS" "$WAVE" "$NOTE"4/"$NOTE"5 fade t "$SECONDS") \
+    <(sox -n -p synth "$SECONDS" "$WAVE" "$NOTE"5/"$NOTE"6 fade t 0 "$SECONDS" "$SECONDS") \
+  repeat "$REPEAT" \
+  remix - \
+  norm -1
